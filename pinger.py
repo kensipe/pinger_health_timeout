@@ -57,11 +57,6 @@ def make_handler(start_time):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
 
-            now = datetime.datetime.now()
-            if now > start_time + datetime.timedelta(seconds = 10):
-                logging.info("long sleep")
-                time.sleep(5)
-
             marathonId = os.getenv("MARATHON_APP_ID", "NO_MARATHON_APP_ID_SET")
             msg = "Pong {}".format(marathonId)
 
@@ -96,11 +91,29 @@ def make_handler(start_time):
 
             return
 
+        def handle_delay_ping(self):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+
+            now = datetime.datetime.now()
+            if now > start_time + datetime.timedelta(seconds = 10):
+                logging.info("long sleep")
+                time.sleep(5)
+
+            marathonId = os.getenv("MARATHON_APP_ID", "NO_MARATHON_APP_ID_SET")
+            msg = "Pong {}".format(marathonId)
+
+            self.wfile.write(byte_type(msg, "UTF-8"))
+            return
+
         def do_GET(self):
             try:
                 logging.debug("Got GET request")
                 if self.path == '/ping':
                     return self.handle_ping()
+            elif self.path.startswith('/delay'):
+                    return self.handle_delay_ping()
                 elif self.path.startswith('/relay-ping'):
                     return self.handle_relay()
                 else:
